@@ -5,7 +5,7 @@ differ. After you've built a binary, running the
 test suite to confirm that the binary works as intended is a good next step.
 
 If you can reproduce a test failure, search for it in the
-[Node.js issue tracker](https://github.com/nodejs/node/issues) or
+[Node.js issue tracker](httpsp://github.com/nodejs/node/issues) or
 file a new issue.
 
 ## Table of contents
