@@ -514,7 +514,7 @@ By default, Node.js will run all files matching these patterns:
 * `**/test.{cjs,mjs,js}`
 * `**/test/**/*.{cjs,mjs,js}`
 
-Unless [`--no-experimental-strip-types`][] is supplied, the following
+Unless [`--no-strip-types`][] is supplied, the following
 additional patterns are also matched:
 
 * `**/*.test.{cts,mts,ts}`
@@ -2135,7 +2135,9 @@ Resets the implementation of the mock module.
 ## Class: `MockPropertyContext`
 
 <!-- YAML
-added: v24.3.0
+added:
+  - v24.3.0
+  - v22.20.0
 -->
 
 The `MockPropertyContext` class is used to inspect or manipulate the behavior
@@ -2421,7 +2423,9 @@ test('mocks a builtin module in both module systems', async (t) => {
 ### `mock.property(object, propertyName[, value])`
 
 <!-- YAML
-added: v24.3.0
+added:
+  - v24.3.0
+  - v22.20.0
 -->
 
 * `object` {Object} The object whose value is being mocked.
@@ -3992,7 +3996,7 @@ Can be used to abort test subtasks when the test has been aborted.
 [`--experimental-test-coverage`]: cli.md#--experimental-test-coverage
 [`--experimental-test-module-mocks`]: cli.md#--experimental-test-module-mocks
 [`--import`]: cli.md#--importmodule
-[`--no-experimental-strip-types`]: cli.md#--no-experimental-strip-types
+[`--no-strip-types`]: cli.md#--no-strip-types
 [`--test-concurrency`]: cli.md#--test-concurrency
 [`--test-coverage-exclude`]: cli.md#--test-coverage-exclude
 [`--test-coverage-include`]: cli.md#--test-coverage-include

@@ -54,9 +54,18 @@ const noop = () => {};
 const hasCrypto = Boolean(process.versions.openssl) &&
                   !process.env.NODE_SKIP_CRYPTO;
 
+const hasInspector = Boolean(process.features.inspector);
 const hasSQLite = Boolean(process.versions.sqlite);
 
 const hasQuic = hasCrypto && !!process.features.quic;
+
+const hasLocalStorage = (() => {
+  try {
+    return hasSQLite && globalThis.localStorage !== undefined;
+  } catch {
+    return false;
+  }
+})();
 
 /**
  * Parse test metadata from the specified file.
@@ -175,8 +184,9 @@ function isPi() {
   }
 }
 
-// When using high concurrency or in the CI we need much more time for each connection attempt
-net.setDefaultAutoSelectFamilyAttemptTimeout(platformTimeout(net.getDefaultAutoSelectFamilyAttemptTimeout() * 10));
+// When using high concurrency or in the CI we need much more time for each connection attempt.
+// Default 500ms becomes 2500ms for tests.
+net.setDefaultAutoSelectFamilyAttemptTimeout(platformTimeout(net.getDefaultAutoSelectFamilyAttemptTimeout() * 5));
 const defaultAutoSelectFamilyAttemptTimeout = net.getDefaultAutoSelectFamilyAttemptTimeout();
 
 const buildType = process.config.target_defaults ?
@@ -349,7 +359,6 @@ const knownGlobals = new Set([
  'CompressionStream',
  'DecompressionStream',
  'Storage',
- 'localStorage',
  'sessionStorage',
 ].forEach((i) => {
   if (globalThis[i] !== undefined) {
@@ -362,6 +371,10 @@ if (hasCrypto) {
   knownGlobals.add(globalThis.Crypto);
   knownGlobals.add(globalThis.CryptoKey);
   knownGlobals.add(globalThis.SubtleCrypto);
+}
+
+if (hasLocalStorage) {
+  knownGlobals.add(globalThis.localStorage);
 }
 
 const { Worker } = require('node:worker_threads');
@@ -386,6 +399,11 @@ if (process.env.NODE_TEST_KNOWN_GLOBALS !== '0') {
       // globalThis.crypto is a getter that throws if Node.js was compiled
       // without OpenSSL so we'll skip it if it is not available.
       if (val === 'crypto' && !hasCrypto) {
+        continue;
+      }
+      // globalThis.localStorage is a getter that throws if Node.js was
+      // executed without a --localstorage-file path.
+      if (val === 'localStorage' && !hasLocalStorage) {
         continue;
       }
       if (!knownGlobals.has(globalThis[val])) {
@@ -711,7 +729,7 @@ function expectsError(validator, exact) {
 }
 
 function skipIfInspectorDisabled() {
-  if (!process.features.inspector) {
+  if (!hasInspector) {
     skip('V8 inspector is disabled');
   }
 }
@@ -913,6 +931,12 @@ function expectRequiredTLAError(err) {
   }
 }
 
+function sleepSync(ms) {
+  const sab = new SharedArrayBuffer(4);
+  const i32 = new Int32Array(sab);
+  Atomics.wait(i32, 0, 0, ms);
+}
+
 const common = {
   allowGlobals,
   buildType,
@@ -930,7 +954,9 @@ const common = {
   hasIntl,
   hasCrypto,
   hasQuic,
+  hasInspector,
   hasSQLite,
+  hasLocalStorage,
   invalidArgTypeHelper,
   isAlive,
   isASan,
@@ -962,6 +988,7 @@ const common = {
   skipIfInspectorDisabled,
   skipIfSQLiteMissing,
   spawnPromisified,
+  sleepSync,
 
   get enoughTestMem() {
     return require('os').totalmem() > 0x70000000; /* 1.75 Gb */
